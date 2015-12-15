@@ -14,7 +14,7 @@
 
 package pyspark_util
 
-import java.io.{NotSerializableException, OutputStream}
+import java.io.{ NotSerializableException, OutputStream }
 import java.math.BigInteger
 import java.net.{ Inet4Address, Inet6Address, InetAddress }
 import java.nio.ByteBuffer
@@ -36,13 +36,25 @@ import org.apache.spark.streaming.dstream.DStream
 
 import Conversions._
 
-object Pickling {
+@serializable
+class Pickling {
+  register()
+
+  def pickler() = {
+    register() // ensure the custom picklers and constructors are registered also after (de)serialization
+    new Pickler()
+  }
+
+  def unpickler() = {
+    register() // ensure the custom picklers and constructors are registered also after (de)serialization
+    new Unpickler()
+  }
 
   implicit def toPickleableRDD(rdd: RDD[_]) = new PicklableRDD(rdd)
   implicit def toUnpickleableRDD(rdd: RDD[Array[Byte]]) = new UnpicklableRDD(rdd)
   implicit def toUnpickleableStream(dstream: DStream[Array[Byte]]) = new UnpicklableDStream(dstream)
 
-  def register() = {
+  def register() {
     Unpickler.registerConstructor("uuid", "UUID", UUIDUnpickler)
 
     Pickler.registerCustomPickler(classOf[UUID], UUIDPickler)
@@ -88,31 +100,32 @@ object Pickling {
   }
 }
 
+object Pickling extends Pickling
+
 class PicklableRDD(rdd: RDD[_]) {
-  def pickle() = rdd.mapPartitions(new BatchPickler(), true)
+  def pickle()(implicit pickling: Pickling) = rdd.mapPartitions(new BatchPickler(), true)
 }
 
 class UnpicklableRDD(rdd: RDD[Array[Byte]]) {
-  def unpickle() = rdd.flatMap(new BatchUnpickler())
+  def unpickle()(implicit pickling: Pickling) = rdd.flatMap(new BatchUnpickler())
 }
 
 class UnpicklableDStream(dstream: DStream[Array[Byte]]) {
-  def unpickle() = dstream.flatMap(new BatchUnpickler())
+  def unpickle()(implicit pickling: Pickling) = dstream.flatMap(new BatchUnpickler())
 }
 
-class BatchPickler(batchSize: Int = 1000)
+class BatchPickler(batchSize: Int = 1000)(implicit pickling: Pickling)
     extends (Iterator[_] => Iterator[Array[Byte]])
     with Serializable {
 
   def apply(in: Iterator[_]): Iterator[Array[Byte]] = {
-    val pickler = new Pickler()
-    in.grouped(batchSize).map { b => pickler.dumps(b.toArray) }
+    in.grouped(batchSize).map { b => pickling.pickler().dumps(b.toArray) }
   }
 }
 
-class BatchUnpickler extends (Array[Byte] => Seq[Any]) with Serializable {
+class BatchUnpickler(implicit pickling: Pickling) extends (Array[Byte] => Seq[Any]) with Serializable {
   def apply(in: Array[Byte]): Seq[Any] = {
-    val unpickled = new Unpickler().loads(in)
+    val unpickled = pickling.unpickler().loads(in)
     asSeq(unpickled)
   }
 }
