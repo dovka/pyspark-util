@@ -36,8 +36,7 @@ import org.apache.spark.streaming.dstream.DStream
 
 import Conversions._
 
-@serializable
-class Pickling {
+class Pickling extends Serializable {
   register()
 
   def pickler() = {
