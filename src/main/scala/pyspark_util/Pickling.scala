@@ -20,20 +20,16 @@ import java.net.{ Inet4Address, Inet6Address, InetAddress }
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
 import java.util.{ ArrayList, Collection, HashMap, List => JList, Map => JMap, UUID }
-
 import scala.reflect.ClassTag
 import scala.collection.JavaConversions._
 import scala.collection.immutable.HashMap.HashTrieMap
-import scala.collection.immutable.List
+import scala.collection.immutable.{List, Set, Vector}
 import scala.collection.immutable.Map.{ Map1, Map2, Map3, Map4, WithDefault }
 import scala.collection.mutable.{ ArraySeq, Buffer, WrappedArray }
 import scala.reflect.runtime.universe.typeTag
-
 import net.razorvine.pickle.{ IObjectConstructor, IObjectPickler, Opcodes, PickleUtils, Pickler, Unpickler }
-
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
-
 import Conversions._
 
 class Pickling extends Serializable {
@@ -90,6 +86,12 @@ class Pickling extends Serializable {
     Pickler.registerCustomPickler(classOf[Tuple20[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _]], ListPickler)
     Pickler.registerCustomPickler(classOf[Tuple21[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _]], ListPickler)
     Pickler.registerCustomPickler(classOf[Tuple22[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _]], ListPickler)
+    Pickler.registerCustomPickler(classOf[Vector[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[Set[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[Set.Set1[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[Set.Set2[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[Set.Set3[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[Set.Set4[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[WithDefault[_, _]], MapPickler)
     Pickler.registerCustomPickler(classOf[Map1[_, _]], MapPickler)
     Pickler.registerCustomPickler(classOf[Map2[_, _]], MapPickler)
@@ -234,6 +236,7 @@ object ListPickler extends IObjectPickler {
         case b: Buffer[_] => bufferAsJavaList(b)
         case s: Seq[_] => seqAsJavaList(s)
         case p: Product => seqAsJavaList(p.productIterator.toSeq)
+        case s: Set[_] => setAsJavaSet(s)
         case _ => throw new NotSerializableException(o.toString())
       })
   }
