@@ -23,6 +23,7 @@ import java.util.{ ArrayList, Collection, HashMap, List => JList, Map => JMap, U
 import scala.reflect.ClassTag
 import scala.collection.JavaConversions._
 import scala.collection.immutable.HashMap.HashTrieMap
+import scala.collection.immutable.HashSet.{HashSet1, HashTrieSet}
 import scala.collection.immutable.{List, Set, Vector}
 import scala.collection.immutable.Map.{ Map1, Map2, Map3, Map4, WithDefault }
 import scala.collection.mutable.{ ArraySeq, Buffer, WrappedArray }
@@ -92,6 +93,8 @@ class Pickling extends Serializable {
     Pickler.registerCustomPickler(classOf[Set.Set2[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[Set.Set3[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[Set.Set4[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[HashSet1[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[HashTrieSet[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[WithDefault[_, _]], MapPickler)
     Pickler.registerCustomPickler(classOf[Map1[_, _]], MapPickler)
     Pickler.registerCustomPickler(classOf[Map2[_, _]], MapPickler)
