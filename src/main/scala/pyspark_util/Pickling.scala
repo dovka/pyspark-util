@@ -54,6 +54,7 @@ class Pickling extends Serializable {
     Unpickler.registerConstructor("uuid", "UUID", UUIDUnpickler)
 
     Pickler.registerCustomPickler(classOf[UUID], UUIDPickler)
+    Pickler.registerCustomPickler(classOf[UUIDHolder], UUIDPickler)
     Pickler.registerCustomPickler(classOf[InetAddress], AsStringPickler)
     Pickler.registerCustomPickler(classOf[Inet4Address], AsStringPickler)
     Pickler.registerCustomPickler(classOf[Inet6Address], AsStringPickler)
@@ -171,7 +172,10 @@ object UUIDPickler extends IObjectPickler {
     out.write(Opcodes.GLOBAL)
     out.write("uuid\nUUID\n".getBytes())
     out.write(Opcodes.MARK)
-    pickler.save(o.asInstanceOf[UUID].toString())
+    o match {
+      case uuid: UUID => pickler.save(uuid.toString())
+      case holder: UUIDHolder => pickler.save(holder.uuid.toString())
+    }
     out.write(Opcodes.TUPLE)
     out.write(Opcodes.REDUCE)
   }
