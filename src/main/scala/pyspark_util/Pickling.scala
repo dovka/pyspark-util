@@ -22,6 +22,7 @@ import java.nio.channels.Channels
 import java.util.{ ArrayList, Collection, HashMap, List => JList, Map => JMap, UUID }
 import scala.reflect.ClassTag
 import scala.collection.JavaConversions._
+import scala.collection.convert.Wrappers.{JListWrapper, JSetWrapper, JMapWrapper}
 import scala.collection.immutable.HashMap.HashTrieMap
 import scala.collection.immutable.HashSet.{HashSet1, HashTrieSet}
 import scala.collection.immutable.{List, Set, Vector}
@@ -65,6 +66,8 @@ class Pickling extends Serializable {
     Pickler.registerCustomPickler(classOf[ArraySeq[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[Buffer[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[WrappedArray.ofRef[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[JListWrapper[_]], ListPickler)
+    Pickler.registerCustomPickler(classOf[JSetWrapper[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[Stream.Cons[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[Tuple1[_]], ListPickler)
     Pickler.registerCustomPickler(classOf[Tuple2[_, _]], ListPickler)
@@ -102,6 +105,7 @@ class Pickling extends Serializable {
     Pickler.registerCustomPickler(classOf[Map3[_, _]], MapPickler)
     Pickler.registerCustomPickler(classOf[Map4[_, _]], MapPickler)
     Pickler.registerCustomPickler(classOf[HashTrieMap[_, _]], MapPickler)
+    Pickler.registerCustomPickler(classOf[JMapWrapper[_, _]], MapPickler)
   }
 }
 
